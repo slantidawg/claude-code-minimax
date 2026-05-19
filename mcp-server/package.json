@@ -1,0 +1,21 @@
+{
+  "name": "minimax-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "minimax-mcp": "src/server.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "zod": "^3.25 || ^4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

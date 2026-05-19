@@ -1,0 +1,18 @@
+{
+  "name": "minimax-mcp",
+  "description": "Delegate scoped coding tasks from Claude Code to MiniMax-M2.7-highspeed via an Anthropic-compatible endpoint, with automatic fallback to Sonnet then Haiku. Bundles the MCP server, the orchestration-discipline skill that makes delegations actually save money, and a cost-summary slash command.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Colin",
+    "email": "colin@tessaract.io"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "minimax",
+    "delegation",
+    "cost-optimization",
+    "subprocess",
+    "orchestration"
+  ]
+}
