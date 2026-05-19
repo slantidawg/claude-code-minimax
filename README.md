@@ -1,4 +1,8 @@
-# minimax-mcp (Claude Code plugin)
+# claude-code-minimax
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Plugin: Claude Code](https://img.shields.io/badge/Plugin-Claude%20Code-blue)](https://docs.claude.com/claude-code)
+[![MCP](https://img.shields.io/badge/MCP-1.x-green)](https://modelcontextprotocol.io)
 
 Delegate scoped coding work from Claude Code to **MiniMax-M2.7-highspeed** (via MiniMax's Anthropic-compatible endpoint), with automatic fallback to `claude-sonnet-4-6` then `claude-haiku-4-5-20251001` on hard failure. Bundles the MCP server, an orchestration-discipline skill, and a cost-summary slash command.
 
@@ -6,7 +10,14 @@ Delegate scoped coding work from Claude Code to **MiniMax-M2.7-highspeed** (via 
 
 Frontier-model tokens are expensive. Most coding work — focused file edits, test loops, small refactors — does not require frontier reasoning. This plugin offloads that work to MiniMax (cheap, fast, Anthropic-API-compatible) and keeps your primary Claude session as orchestrator / reviewer.
 
-Critical caveat: **bad delegations cost more than doing the work yourself**. The plugin ships an opinionated skill that encodes the discipline learned the hard way — sloppy briefs produce $10+ failures, tight briefs produce $0.50 wins. The skill is half the value.
+**Critical caveat: bad delegations cost more than doing the work yourself.** From the same project, two real delegations:
+
+| | Brief style | Files | Turns | Cost | Result |
+|---|---|---|---|---|---|
+| Attempt 1 | over-broad, no fixture context, "as you did before" references | 7 | 41 (max) | **$10.81** | misdiagnosed; required 3 delegations |
+| Attempt 2 | scoped, fixtures pasted verbatim, line-precise edits, runnable acceptance commands | 2 | 10 / 15 | **$0.82** | correct first try, single verification pass |
+
+Same model. Same project. **13× cost delta, all in brief discipline.** The plugin ships an opinionated skill that encodes what changed between attempts. The skill is half the value.
 
 ## What's in the box
 
@@ -18,6 +29,57 @@ Critical caveat: **bad delegations cost more than doing the work yourself**. The
 | `templates/MMX_BRIEFING.md` | Skeleton for a per-project briefing. The MCP server auto-prepends `MMX_BRIEFING.md` or `docs/MMX_BRIEFING.md` from cwd to every delegated task. |
 | `docs/spec.md` | Full design spec — architecture, tool surface, error handling, security. |
 | `docs/plan.md` | Original implementation plan — useful as a reference for extending the server. |
+
+## What it looks like
+
+**Calling the tool** (primary Claude assembles this; you don't usually hand-write it):
+
+```json
+{
+  "task": "TASK: rename helper `getUser` to `loadUser` in src/auth.ts.\n\nCURRENT STATE: src/auth.ts line 14 defines `export function getUser(id: string)`. Callers in src/routes/me.ts:8, src/middleware/session.ts:22.\n\nEDITS:\n1. src/auth.ts:14 — change `getUser` to `loadUser`\n2. src/routes/me.ts:8 — update import + call site\n3. src/middleware/session.ts:22 — update import + call site\n\nDEFINITION OF DONE: npm test passes, no other files changed.",
+  "cwd": "/home/me/project",
+  "acceptance_commands": ["cd /home/me/project && npm test", "cd /home/me/project && tsc --noEmit"],
+  "max_turns": 10
+}
+```
+
+**Response** (excerpt — the full result has more fields):
+
+```json
+{
+  "engine_used": "MiniMax-M2.7-highspeed",
+  "stop_reason": "completed",
+  "final_response": "Renamed getUser → loadUser at all 3 call sites. npm test: 47 passed. tsc --noEmit: clean.",
+  "attempts": [
+    { "model": "MiniMax-M2.7-highspeed", "stop_reason": "completed", "duration_ms": 47230, "error": null }
+  ],
+  "turns_used": 7,
+  "duration_ms": 47230,
+  "cost_usd": 0.0921,
+  "files_modified": ["src/auth.ts", "src/routes/me.ts", "src/middleware/session.ts"]
+}
+```
+
+**Server log** (`~/.minimax-mcp/server.log`, one JSON line per event):
+
+```
+{"ts":"2026-05-19T14:21:03Z","jobId":"j7a3b9","kind":"delegate_start","cwd":"/home/me/project","briefing_path":"/home/me/project/docs/MMX_BRIEFING.md"}
+{"ts":"2026-05-19T14:21:03Z","jobId":"j7a3b9","kind":"engine_start","model":"MiniMax-M2.7-highspeed"}
+{"ts":"2026-05-19T14:21:50Z","jobId":"j7a3b9","kind":"engine_end","model":"MiniMax-M2.7-highspeed","stop_reason":"completed","duration_ms":47230}
+{"ts":"2026-05-19T14:21:50Z","jobId":"j7a3b9","kind":"delegate_end","engine_used":"MiniMax-M2.7-highspeed","attempts":1,"duration_ms":47230,"cost_usd":0.0921}
+```
+
+**Slash command — `/mmx-cost`:**
+
+```
+=== MiniMax MCP usage — Today (since 2026-05-19) ===
+Total: 8 delegations  $4.7218
+  MiniMax-M2.7-highspeed: 7 calls  $4.6297  avg 42100 ms
+  claude-sonnet-4-6: 1 calls  $0.0921  avg 31400 ms
+
+Non-completed outcomes (1):
+  2026-05-19T11:04:12Z  MiniMax-M2.7-highspeed: max_turns
+```
 
 ## Setup (one-time, ~3 minutes)
 
