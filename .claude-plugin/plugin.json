@@ -6,6 +6,8 @@
     "name": "Colin",
     "email": "colin@tessaract.io"
   },
+  "homepage": "https://github.com/slantidawg/claude-code-minimax",
+  "repository": "https://github.com/slantidawg/claude-code-minimax",
   "license": "MIT",
   "keywords": [
     "mcp",
