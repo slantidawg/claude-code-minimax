@@ -1,0 +1,19 @@
+{
+  "name": "slantidawg",
+  "description": "Plugins by slantidawg.",
+  "owner": {
+    "name": "slantidawg"
+  },
+  "plugins": [
+    {
+      "name": "minimax-mcp",
+      "description": "Delegate scoped coding tasks from Claude Code to MiniMax-M2.7-highspeed via the Anthropic-compatible endpoint, with auto-fallback to Sonnet then Haiku. Bundles MCP server, orchestration-discipline skill, and cost-summary slash command.",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "Colin",
+        "email": "colin@tessaract.io"
+      }
+    }
+  ]
+}

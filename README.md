@@ -81,58 +81,51 @@ Non-completed outcomes (1):
   2026-05-19T11:04:12Z  MiniMax-M2.7-highspeed: max_turns
 ```
 
-## Setup (one-time, ~3 minutes)
+## Install
 
-### 1. Install the plugin
+You'll need a MiniMax API key — sign up at <https://www.minimaxi.com/> and generate one from the platform console.
 
-If you maintain your own marketplace, register this repo in `~/.claude/plugins/known_marketplaces.json`. Otherwise:
-
-```bash
-# Direct install from the repo (adjust the path to where you cloned this):
-/plugin install /path/to/minimax-mcp-plugin
-```
-
-Or, if you've published it to a marketplace:
+**Step 1 — shell setup (one-time):**
 
 ```bash
-/plugin install minimax-mcp@<your-marketplace>
-```
-
-### 2. Get a MiniMax API key
-
-Sign up at <https://www.minimaxi.com/> (international) or your regional MiniMax portal. Generate an API key from the platform console.
-
-### 3. Install the MCP server's npm dependencies
-
-The plugin ships the server source but not the npm dependencies — install them once:
-
-```bash
-cd "$(find ~/.claude/plugins -type d -name mcp-server -path '*minimax-mcp*' | head -1)" && npm install
-```
-
-(That `find` resolves to the plugin's `mcp-server/` after install. You can also pass the path directly if you know it.)
-
-### 4. Create the env file
-
-The server reads `~/.minimax-mcp/.env` by default (independent of where the plugin is installed, so it survives upgrades).
-
-```bash
-mkdir -p ~/.minimax-mcp
-cat > ~/.minimax-mcp/.env <<'EOF'
-MINIMAX_API_KEY=<paste your key here>
-MINIMAX_BASE_URL=https://api.minimax.io/anthropic
-MINIMAX_MODEL=MiniMax-M2.7-highspeed
-# Optional override of the fallback chain:
-# MINIMAX_FALLBACK_MODELS=claude-sonnet-4-6,claude-haiku-4-5-20251001
-EOF
+git clone https://github.com/slantidawg/claude-code-minimax ~/claude-code-minimax
+cd ~/claude-code-minimax/mcp-server && npm install
+mkdir -p ~/.minimax-mcp && cp ~/claude-code-minimax/mcp-server/.env.example ~/.minimax-mcp/.env
 chmod 600 ~/.minimax-mcp/.env
 ```
 
-If you want the env file somewhere else, set `MINIMAX_MCP_ENV_PATH` in your shell and the server will respect it.
+Open `~/.minimax-mcp/.env` in your editor and paste your MiniMax API key into the `MINIMAX_API_KEY=` line.
 
-### 5. Restart Claude Code
+**Step 2 — register the plugin in Claude Code:**
 
-The MCP server registers at session start. After restart, run `/mcp` and confirm `minimax` is listed.
+```
+/plugin install ~/claude-code-minimax
+```
+
+**Step 3 — restart Claude Code.**
+
+Verify with `/mcp` — you should see `minimax` listed with `delegate_task` and `list_models`.
+
+### Where things live
+
+| Path | Purpose |
+|---|---|
+| `~/claude-code-minimax/` | Plugin source (git clone). Editable; pull to update. |
+| `~/.minimax-mcp/.env` | Your API key. Independent of plugin install location — survives upgrades. |
+| `~/.minimax-mcp/server.log` | Per-delegation event log (auto-created on first call). |
+
+If you want the env file elsewhere, set `MINIMAX_MCP_ENV_PATH=/some/other/path` in your shell.
+
+### Alternative: marketplace install
+
+Prefer to install via Claude Code's marketplace flow so it manages updates? This repo is also a single-plugin marketplace:
+
+```
+/plugin marketplace add slantidawg/claude-code-minimax
+/plugin install minimax-mcp@slantidawg
+```
+
+You'll still need to `npm install` in the plugin's `mcp-server/` directory after install. Claude Code clones the repo to `~/.claude/plugins/cache/slantidawg/minimax-mcp/<version>/mcp-server/`.
 
 ## First-call smoke test
 
