@@ -1,4 +1,5 @@
-mcp-server/node_modules/
+# node_modules is intentionally committed so the plugin installs zero-setup.
+# (See README "Why node_modules is checked in".) All deps are pure JS.
 mcp-server/.env
 mcp-server/*.log
 .DS_Store

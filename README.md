@@ -105,11 +105,12 @@ The env file lives outside the plugin install location on purpose — it survive
 
 ### Part 2 — Install the plugin (pick one method)
 
+`node_modules/` is shipped pre-installed in the repo, so neither method needs `npm install`. Both methods are one shell command (or zero) plus one Claude Code command.
+
 #### Method A — Clone + local install
 
 ```bash
 git clone https://github.com/slantidawg/claude-code-minimax ~/claude-code-minimax
-cd ~/claude-code-minimax/mcp-server && npm install
 ```
 
 In a Claude Code session:
@@ -127,13 +128,7 @@ In a Claude Code session:
 /plugin install minimax-mcp@slantidawg
 ```
 
-Then in your shell — Claude Code clones the plugin to its cache but does NOT install npm deps. Do that once:
-
-```bash
-cd "$(find ~/.claude/plugins/cache -type d -name mcp-server -path '*minimax*' | head -1)" && npm install
-```
-
-(That `find` resolves to the right cache subdirectory regardless of marketplace version. Expected path: `~/.claude/plugins/cache/claude-code-minimax/minimax-mcp/<version>/mcp-server/`.)
+Claude Code clones the plugin to `~/.claude/plugins/cache/slantidawg/minimax-mcp/<version>/`. No `npm install` step — deps ship with the plugin.
 
 ### Part 3 — Restart Claude Code
 
@@ -144,9 +139,18 @@ Verify with `/mcp` — you should see `minimax` listed with `delegate_task` and 
 | Path | Purpose |
 |---|---|
 | Method A: `~/claude-code-minimax/` | Plugin source from git clone. Editable; `git pull` to update. |
-| Method B: `~/.claude/plugins/cache/claude-code-minimax/.../` | Plugin source from marketplace. Managed by Claude Code; updates via `/plugin update`. |
+| Method B: `~/.claude/plugins/cache/slantidawg/minimax-mcp/0.1.0/` | Plugin source from marketplace. Managed by Claude Code; `/plugin update` to pull a new version. |
 | `~/.minimax-mcp/.env` | Your API key. Same location for both methods, survives upgrades. |
 | `~/.minimax-mcp/server.log` | Per-delegation event log (auto-created on first call). |
+
+### Why `node_modules/` is checked in
+
+Claude Code's marketplace install copies a *specific version directory* (e.g. `0.1.0/`, then later `0.2.0/`) — so any deps installed into one version don't carry over to the next. Two ways to handle that:
+
+1. **Ship `node_modules/` in git** (chosen). Plugin installs zero-setup; `/plugin update` "just works." Cost: repo is ~30 MB instead of ~100 KB.
+2. Document `npm install` as a manual step after every install and every update. Cost: every update needs a shell command. Worse UX.
+
+All deps are pure JavaScript with no native bindings, so the committed `node_modules/` is platform-independent. If you'd rather not have node_modules in your fork: `rm -rf mcp-server/node_modules && cd mcp-server && npm install` reproduces it deterministically from `package-lock.json`.
 
 ## First-call smoke test
 
